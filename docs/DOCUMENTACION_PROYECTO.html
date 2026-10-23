@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documentación SUNAT RUC Pro</title>
+<style>
+  body { font-family: "Segoe UI", Calibri, sans-serif; font-size: 11pt; color: #1e293b; background: #fff; max-width: 980px; margin: 24px auto; padding: 0 16px; line-height: 1.45; }
+  h1 { font-size: 20pt; color: #0f172a; border-bottom: 2px solid #0ea5e9; padding-bottom: 4px; }
+  h2 { font-size: 15pt; color: #0369a1; margin-top: 32px; }
+  h3 { font-size: 12pt; color: #0f172a; margin-top: 18px; }
+  table { border-collapse: collapse; margin: 8px 0 14px; width: 100%; }
+  th, td { border: 1px solid #cbd5e1; padding: 5px 8px; vertical-align: top; text-align: left; }
+  th { background: #e0f2fe; }
+  code, pre { font-family: Consolas, monospace; font-size: 10pt; background: #f1f5f9; }
+  pre { padding: 8px 10px; white-space: pre-wrap; }
+  .nota { background: #fef9c3; border-left: 4px solid #f59e0b; padding: 6px 10px; }
+  .clave { background: #fee2e2; border-left: 4px solid #ef4444; padding: 6px 10px; }
+  .ok { background: #dcfce7; border-left: 4px solid #10b981; padding: 6px 10px; }
+</style>
+</head>
+<body>
+
+<h1>SUNAT RUC Pro — Documentación del proyecto</h1>
+<p><b>Versión documentada:</b> V10.py (carpeta <code>C:\DATA SAT\23_10_2026</code>) · <b>Fecha:</b> 23/10/2026 · <b>Python:</b> 3.11.9</p>
+<p class="nota">Sugerencia para OneNote: cada sección <b>h2</b> (1, 2, 3…) puede ser una <b>página</b> dentro de una sección "SUNAT RUC Pro". Copia desde el navegador (Ctrl+A, Ctrl+C) y pega en OneNote para conservar las tablas.</p>
+
+<!-- ============================================================ -->
+<h2>1. Resumen</h2>
+<p><b>Qué hace:</b> toma la lista diaria de documentos (DNI y RUC) de cada carpeta de fecha, consulta masivamente los RUC en SUNAT (servicio <i>e-consultaruc</i>, consulta por archivo en lotes de 100) y genera un Excel consolidado con todos los documentos y sus datos (nombre, dirección, ubigeo, estado/restricción).</p>
+<p><b>Para quién:</b> uso interno, operado desde una ventana Tkinter (no requiere consola).</p>
+<p><b>Contexto del negocio (por confirmar):</b> cada día llegan tres listas alineadas: <i>Placa</i>, <i>Documento</i> (DNI o RUC del propietario) y las respuestas de datos personales. El manual GATSO en <code>Complementarios</code> sugiere que son infracciones captadas por cámaras y que se necesita identificar al propietario del vehículo.</p>
+
+<table>
+<tr><th>Componente</th><th>Archivo</th><th>Rol</th></tr>
+<tr><td>Aplicación principal</td><td><code>app\V10.py</code></td><td>GUI con modo Manual (un archivo) y modo Automático (rango de fechas). Consulta SUNAT y arma consolidados.</td></tr>
+<tr><td>Verificador</td><td><code>verificacion.py</code></td><td>GUI para comparar dos Excel por columna clave, y comparar dos listas pegadas.</td></tr>
+<tr><td>Diagnóstico</td><td><code>diagnostico.py</code></td><td>Script de consola: muestra hojas, primeras filas, columnas detectadas y longitudes de documento de un archivo.</td></tr>
+<tr><td>Versión anterior</td><td><code>DATA_OLD\Complementarios\A\A\sunat_ruc.py</code></td><td>Predecesor de V10 (tenía modo consola con argumentos y consulta manual <code>consManual</code>).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>2. Estructura de carpetas</h2>
+<pre>C:\DATA SAT\
+├── 21_10_2026\                 ← versión anterior del proyecto (solo Complementarios + DATOS SAT)
+└── 23_10_2026\                 ← VERSIÓN ACTUAL (reorganizada el 23/10/2026)
+    ├── README.md
+    ├── app\                    ← V10.py, verificacion.py, diagnostico.py, requirements.txt
+    ├── DATOS SAT\              ← una subcarpeta por día (YYYY-MM-DD), 43 días × 4 archivos
+    ├── docs\                   ← esta documentación, REGISTRO_DE_CAMBIOS.md, manual GATSO, flujo
+    ├── archivo\                ← versión anterior (sunat_ruc.py), respaldos y salidas de corridas previas
+    └── _DUPLICADOS_PARA_ELIMINAR\   ← duplicados exactos verificados por hash
+</pre>
+<p class="nota">Los nombres de esta sección corresponden a la estructura nueva. Detalle de lo movido en <code>REGISTRO_DE_CAMBIOS.md</code>. <code>codigo.py</code> era un RAR renombrado y ahora está en <code>archivo\version_anterior_sunat_ruc\codigo_respaldo.rar</code>.</p>
+
+<h3>Contenido de cada carpeta diaria</h3>
+<table>
+<tr><th>Archivo</th><th>Contenido</th><th>Columnas</th><th>Filas típicas</th></tr>
+<tr><td><code>DNI ddmmaaaa.xlsx</code></td><td><b>Lista maestra</b> de documentos del día, MIXTA: DNI (8 dígitos) + RUC (11 dígitos), como texto.</td><td><code>Documento</code></td><td>~400 (≈320 DNI + ≈80 RUC)</td></tr>
+<tr><td><code>Placa ddmmaaaa.xlsx</code></td><td>Placas, alineadas fila a fila con la lista de documentos.</td><td><code>Placa</code></td><td>igual que DNI</td></tr>
+<tr><td><code>DNI ddmmaaaa - Respuesta.xlsx</code> / <code>DNI ddmmaaaa_Respuesta.xlsx</code></td><td>Datos personales de <b>solo los DNI</b> (sin RUC).</td><td>DNI, Apellido_Paterno, Apellido_Materno, Nombres, EstadoCivil, Sexo, Direccion, Ubigeo, Restriccion</td><td>≈ cantidad de DNI únicos</td></tr>
+<tr><td><code>RUC ddmmaaaa - Respuesta.xlsx</code> / <code>RUC ddmmaaaa_Respuesta.xlsx</code></td><td>Datos de <b>solo los RUC</b>.</td><td>RUC, Departamento, Provincia, Distrito, Ciudad (actividad), Estado, Fecha_Actual, Fecha_Alta, Nombre, Domicilio</td><td>= cantidad de RUC</td></tr>
+</table>
+
+<p class="clave"><b>Importante:</b> el archivo "DNI … Respuesta" <b>no</b> es mixto, porque no contiene ningún RUC. El archivo mixto es <code>DNI ddmmaaaa.xlsx</code>, que solo trae la columna <code>Documento</code>.</p>
+
+<h3>Dos formatos según la fecha</h3>
+<table>
+<tr><th>Periodo</th><th>Nombre de respuesta</th><th>Cómo viene el DNI</th></tr>
+<tr><td>20/07 – 23/07</td><td><code>… - Respuesta.xlsx</code> (con guion)</td><td>Número entero, <b>pierde el cero inicial</b> (p. ej. 50–92 DNIs de 7 dígitos por día, y 1 de 6).</td></tr>
+<tr><td>24/07 – 31/08</td><td><code>…_Respuesta.xlsx</code> (guion bajo)</td><td>Texto de 8 dígitos con espacios al final (<code>'02670795   '</code>).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>3. Instalación y ejecución</h2>
+<table>
+<tr><th>Paquete</th><th>Uso</th><th>¿Instalado hoy?</th></tr>
+<tr><td>requests</td><td>Consultas HTTP a SUNAT</td><td>Sí (2.34.2)</td></tr>
+<tr><td>openpyxl</td><td>Lectura/escritura de .xlsx</td><td>Sí (3.1.5)</td></tr>
+<tr><td>pandas</td><td>Lo usa <code>verificacion.py</code></td><td><b>No</b>: verificacion.py no arranca sin él</td></tr>
+<tr><td>xlrd</td><td>Leer .xls antiguos (opcional)</td><td>No</td></tr>
+<tr><td>pytest</td><td>Pruebas automáticas</td><td>No</td></tr>
+</table>
+<pre>python -m pip install -r app\requirements.txt
+python app\V10.py            ← abre la aplicación
+python app\verificacion.py   ← abre el comparador
+python app\diagnostico.py "ruta\archivo.xlsx"</pre>
+
+<!-- ============================================================ -->
+<h2>4. Cómo funciona V10 (flujo actual)</h2>
+<h3>Modo Manual (pestaña 1)</h3>
+<ol>
+<li>El usuario selecciona un archivo y lo envía con "Crear RUC y Enviar a SUNAT".</li>
+<li><code>load_input_excel_data</code> lee la hoja activa, toma la fila 1 como encabezado y se queda <b>solo con documentos de 11 dígitos</b>.</li>
+<li>Escribe esos RUC en <code>RUC.xlsx</code>, en la misma carpeta.</li>
+<li><code>process_full_consolidado(RUC.xlsx)</code> vuelve a leer RUC.xlsx y consulta SUNAT en lotes de 100.</li>
+<li>Guarda los ZIP de SUNAT en <code>&lt;carpeta&gt;\resultados_sunat\</code>, los lee y genera <code>resultados_consolidados.xlsx</code> y <code>RUC_actualizado.xlsx</code>.</li>
+</ol>
+<h3>Modo Automático (pestaña 2)</h3>
+<ol>
+<li>El usuario elige la carpeta "DATOS SAT" y el rango Desde/Hasta.</li>
+<li>Por cada subcarpeta <code>YYYY-MM-DD</code> dentro del rango, toma el <b>primer</b> .xlsx/.xls/.txt que encuentra, excepto <code>RUC.xlsx</code>, <code>*actualizado*</code> y <code>resultados*</code>.</li>
+<li>Repite los pasos 2–5 del modo manual. Si una carpeta falla, la manda al panel "Carpetas con error" para resolverla a mano.</li>
+</ol>
+<h3>Consulta a SUNAT (no modificar: funciona)</h3>
+<ul>
+<li>GET a <code>BASE_URL</code> para abrir sesión y obtener cookies.</li>
+<li>POST con <code>accion=consArchivo</code>, <code>tokenArch</code> aleatorio de 52 caracteres y un archivo .txt con un <code>RUC|</code> por línea (máximo 100).</li>
+<li>Respuesta: un ZIP <code>RMaaaammdd….zip</code> con un .txt delimitado por <code>|</code>, en latin-1. Columnas: NumeroRuc, Nombre ó RazonSocial, Tipo de Contribuyente, …, Estado del Contribuyente (índice 6), Departamento/Provincia/Distrito (9/10/11), Direccion (12).</li>
+<li>Si SUNAT responde con un error en HTML, se guarda <code>resultado_sunat_batch_N_ERROR.txt</code>.</li>
+</ul>
+
+<h3>Formato de salida del consolidado</h3>
+<table>
+<tr><th>NumDocumento</th><th>TipoDocumento</th><th>Apellido_Paterno</th><th>Apellido_Materno</th><th>Nombres</th><th>Direccion</th><th>EstadoCivil</th><th>Ubigeo</th><th>Restriccion</th></tr>
+<tr><td>DNI</td><td>"DNI"</td><td>del archivo</td><td>del archivo</td><td>del archivo</td><td>del archivo</td><td>del archivo</td><td>DEP/PROV/DIST</td><td>NINGUNA / CANCELADO…</td></tr>
+<tr><td>RUC</td><td>"RUC"</td><td>N/A</td><td>N/A</td><td>Razón social (SUNAT)</td><td>Dirección (SUNAT)</td><td>N/A</td><td>DEP/PROV/DIST (SUNAT)</td><td>Estado (ACTIVO, BAJA…)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>5. Mapa de funciones de V10.py</h2>
+<table>
+<tr><th>Grupo</th><th>Funciones</th></tr>
+<tr><td>Limpieza de celdas</td><td><code>parse_cell_to_string</code>, <code>normalize_ruc_text</code>, <code>clean_val</code>, <code>_norm_col</code>, <code>_find_col</code>, <code>_COL_ALIAS</code></td></tr>
+<tr><td>Lectura de entrada</td><td><code>load_input_excel_data</code> (consolidado), <code>load_rucs_from_file</code> + <code>extract_document_from_row</code> (solo RUC)</td></tr>
+<tr><td>SUNAT (red)</td><td><code>generate_sunat_token</code>, <code>process_full_consolidado</code>, <code>consult_ruc_file</code>, <code>save_sunat_response</code>, <code>download_archive_from_html</code>, <code>find_archive_link</code></td></tr>
+<tr><td>Parseo de respuestas</td><td><code>parse_sunat_zip_results</code>, <code>consolidate_results</code>, <code>SunatHtmlTableParser</code>, <code>parse_pipe_delimited_text</code></td></tr>
+<tr><td>Salidas Excel</td><td><code>build_consolidated_output</code>, <code>build_updated_input_excel</code>, <code>_auto_fit</code>, <code>_save_wb</code></td></tr>
+<tr><td>Orquestación</td><td><code>process_date_folder_automatically</code></td></tr>
+<tr><td>Interfaz</td><td><code>run_gui</code> (todo el GUI vive dentro de esta función, ~340 líneas)</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>6. Diagnóstico: por qué falla el modo automático</h2>
+<p class="clave"><b>Causa raíz (verificada con los archivos reales):</b></p>
+<ol>
+<li>El selector toma el <b>primer archivo</b> que devuelve Windows en orden alfabético. Como el espacio va antes que el punto, en 20/07–23/07 el primero es <code>DNI 20072026 - Respuesta.xlsx</code> y no <code>DNI 20072026.xlsx</code>.</li>
+<li>Ese archivo trae <b>solo DNIs</b>, y <code>load_input_excel_data</code> descarta todo lo que no tenga 11 dígitos, así que queda vacío y lanza "No se encontraron filas con datos válidos".</li>
+<li>Las fechas por defecto de la GUI (22/07 → 23/07) caen justo en ese periodo, por eso "todas" fallan.</li>
+<li>Desde el 24/07, el punto va antes que el guion bajo, así que se elige la lista maestra <code>DNI ddmmaaaa.xlsx</code> y no da error. Aun así el consolidado sale <b>solo con RUC</b>: se reconstruye desde RUC.xlsx y los DNI se pierden.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>7. Evaluación del código: problemas encontrados</h2>
+<table>
+<tr><th>#</th><th>Severidad</th><th>Problema</th><th>Dónde</th></tr>
+<tr><td>1</td><td>Alta</td><td>Selección de archivo por orden de disco; elige el archivo equivocado según el nombre.</td><td><code>process_date_folder_automatically</code></td></tr>
+<tr><td>2</td><td>Alta</td><td>Solo acepta 11 dígitos: elimina todos los DNI. Además completa con ceros (zfill(11)) los números de 10 dígitos y así inventa RUCs.</td><td><code>load_input_excel_data</code>, <code>normalize_ruc_text</code></td></tr>
+<tr><td>3</td><td>Alta</td><td>El consolidado se arma desde RUC.xlsx y no desde la lista original, así que nunca incluye los DNI.</td><td><code>process_full_consolidado</code></td></tr>
+<tr><td>4</td><td>Alta</td><td>Lee todos los ZIP de <code>resultados_sunat</code>, también los de corridas anteriores, y mezcla datos viejos.</td><td><code>parse_sunat_zip_results</code>, <code>consolidate_results</code></td></tr>
+<tr><td>5</td><td>Media</td><td>El encabezado solo se busca en la fila 1 y siempre en la hoja activa. Si no encuentra la columna, falla en silencio.</td><td><code>load_input_excel_data</code></td></tr>
+<tr><td>6</td><td>Media</td><td>Cualquier error de red en un lote aborta la carpeta completa. No hay reintento ni pausa entre lotes (riesgo de bloqueo por SUNAT).</td><td><code>process_full_consolidado</code></td></tr>
+<tr><td>7</td><td>Media</td><td>Los lotes con error de SUNAT (<code>_ERROR.txt</code>) no se reportan en el modo consolidado. Los RUC de ese lote quedan "N/A" sin aviso.</td><td><code>process_full_consolidado</code></td></tr>
+<tr><td>8</td><td>Media</td><td>Tkinter no es seguro entre hilos: el hilo de trabajo escribe en el log y abre <code>messagebox</code> directamente. Puede congelar o cerrar la ventana.</td><td><code>run_gui</code> (_worker)</td></tr>
+<tr><td>9</td><td>Media</td><td>Las fechas no se validan: se puede elegir 31/02 o Desde &gt; Hasta, y <code>strptime</code> revienta.</td><td><code>ejecutar_automatizacion</code></td></tr>
+<tr><td>10</td><td>Media</td><td>El nombre del "actualizado" sale de RUC.xlsx (<code>RUC_actualizado.xlsx</code>) y no del archivo original.</td><td><code>build_updated_input_excel</code></td></tr>
+<tr><td>11</td><td>Media</td><td>Promete soporte .xls pero openpyxl no lee .xls. Los .txt tampoco pasan por <code>load_input_excel_data</code>.</td><td>selector de archivo, <code>load_input_excel_data</code></td></tr>
+<tr><td>12</td><td>Baja</td><td>Código duplicado: <code>consult_ruc_file</code> y <code>process_full_consolidado</code> repiten el bucle de lotes, y <code>consolidate_results</code> y <code>parse_sunat_zip_results</code> repiten el parseo del ZIP.</td><td>varias</td></tr>
+<tr><td>13</td><td>Baja</td><td>Imports sin uso: <code>argparse</code>, <code>shutil</code>, <code>subprocess</code>, <code>sys</code>. Quedaron del modo consola de sunat_ruc.py.</td><td>cabecera</td></tr>
+<tr><td>14</td><td>Baja</td><td><code>parse_cell_to_string</code> trunca decimales sin avisar (<code>12.7 → "12"</code>).</td><td><code>parse_cell_to_string</code></td></tr>
+<tr><td>15</td><td>Baja</td><td>Los años están fijos en el combo (2024–2030) y las fechas por defecto también (22/07 y 23/07).</td><td><code>run_gui</code></td></tr>
+<tr><td>16</td><td>Baja</td><td>Sin pruebas automáticas, sin <code>requirements.txt</code> en la versión actual y sin archivo de log persistente (solo el log de la ventana).</td><td>proyecto</td></tr>
+<tr><td>17</td><td>Baja</td><td><code>verificacion.py</code>: compara texto crudo (<code>"123.0"</code> ≠ <code>"123"</code>, <code>"nan"</code>) y las claves duplicadas se pisan sin avisar.</td><td><code>verificacion.py</code></td></tr>
+</table>
+<p class="ok"><b>Lo que está bien:</b> la consulta a SUNAT (GET + POST <code>consArchivo</code>) funciona, la detección de ZIP/HTML/errores es robusta, se decodifica en latin-1 (la versión anterior dejaba "JOS� MAR�A") y la GUI es clara, con un panel de carpetas pendientes muy útil.</p>
+
+<!-- ============================================================ -->
+<h2>8. Problemas en los datos (no son del código)</h2>
+<table>
+<tr><th>Fecha</th><th>Hallazgo</th></tr>
+<tr><td>Todas</td><td>La lista maestra trae <b>documentos repetidos</b> (entre 1 y 11 por día).</td></tr>
+<tr><td>20/07</td><td>34 DNI de la lista no tienen fila en "DNI – Respuesta". También hay 1 DNI de 6 dígitos.</td></tr>
+<tr><td>26/07, 28/07, 27/07, 07/08, 27/08</td><td>Faltan respuestas de DNI: 10, 5, 1, 1 y 1 respectivamente.</td></tr>
+<tr><td>28/07, 13/08, 15/08, 19/08</td><td>El archivo de Placa tiene <b>una fila más</b> que el de DNI, así que la alineación placa↔documento no está garantizada esos días.</td></tr>
+<tr><td>30/08</td><td>Hay un archivo de otro día, <code>RUC 29082026_Respuesta.xlsx</code>, y <code>nova.xlsx</code>, que es una copia de ese mismo archivo. El correcto es <code>RUC 30082026_Respuesta.xlsx</code>.</td></tr>
+<tr><td>01/08</td><td>Subcarpeta anidada <code>2026-08-01\2026-08-02\</code>: es un duplicado del 02/08.</td></tr>
+<tr><td>20/07</td><td>Restos de una corrida anterior: <code>RUC.xlsx</code>, <code>resultados_sunat\</code> y <code>~$resultados_consolidados.xlsx</code> (archivo de bloqueo de Excel).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>9. Mejoras propuestas (en orden)</h2>
+<ol>
+<li><b>Identificar cada archivo por su rol, no por el orden:</b> lista maestra = <code>DNI ddmmaaaa.xlsx</code>; datos DNI = <code>DNI*Respuesta*</code>; RUC respuesta = <code>RUC ddmmaaaa*Respuesta*</code> <b>con la misma fecha que la carpeta</b>. Avisar si falta alguno o si sobra.</li>
+<li><b>Construir el consolidado desde la lista maestra</b>, que tiene el orden y todos los documentos: DNI con los datos de "DNI – Respuesta" (comparando con zfill(8)) y RUC con los datos de SUNAT. Los documentos sin datos se marcan como "SIN RESPUESTA" y no desaparecen.</li>
+<li>Aceptar DNI (8, o 7→zfill(8)) y RUC (11). Las demás longitudes van a un log de inválidos sin abortar.</li>
+<li>Usar una carpeta limpia por corrida: <code>resultados_sunat\&lt;aaaammdd_hhmmss&gt;\</code>.</li>
+<li>Pausa de 1–2 s entre lotes, 1 reintento ante fallo de red y reporte de lotes con error.</li>
+<li>GUI: validar fechas y pasar toda actualización desde el hilo por <code>root.after(0, …)</code>.</li>
+<li>Quitar duplicados de la lista antes de consultar SUNAT (menos lotes), conservándolos en el consolidado.</li>
+<li>Separar V10.py en módulos: <code>sunat_client.py</code> (red), <code>entrada.py</code> (lectura), <code>consolidado.py</code> (salidas), <code>gui.py</code>. Agregar <code>requirements.txt</code>, pruebas con pytest y un log en archivo por corrida.</li>
+<li>Opcional: usar el archivo "RUC – Respuesta" existente como respaldo si SUNAT no responde, o para validar los datos de SUNAT.</li>
+</ol>
+
+<!-- ============================================================ -->
+<h2>10. Historial de versiones</h2>
+<table>
+<tr><th>Versión</th><th>Ubicación</th><th>Cambios</th></tr>
+<tr><td>sunat_ruc.py</td><td>DATA_OLD\Complementarios\A\A</td><td>Consola + GUI simple; consulta manual (<code>consManual</code>) y por archivo; decodificación con <code>errors="replace"</code> (dañaba tildes).</td></tr>
+<tr><td>21_10_2026</td><td>C:\DATA SAT\21_10_2026</td><td>Solo datos y complementarios (sin V10).</td></tr>
+<tr><td>V10.py</td><td>C:\DATA SAT\23_10_2026</td><td>GUI con pestañas, modo Automático por fechas, panel de errores, consolidado DNI+RUC (aún no funciona), corrección latin-1.</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>11. Glosario</h2>
+<table>
+<tr><th>Término</th><th>Significado</th></tr>
+<tr><td>DNI</td><td>Documento Nacional de Identidad (persona natural), 8 dígitos.</td></tr>
+<tr><td>RUC</td><td>Registro Único de Contribuyentes (SUNAT), 11 dígitos. Empieza con 10 (persona natural) o 20 (empresa).</td></tr>
+<tr><td>SUNAT</td><td>Superintendencia Nacional de Aduanas y de Administración Tributaria.</td></tr>
+<tr><td>Lote</td><td>Grupo de hasta 100 RUC enviados en una sola consulta.</td></tr>
+<tr><td>Lista maestra</td><td><code>DNI ddmmaaaa.xlsx</code>: todos los documentos del día, en orden.</td></tr>
+<tr><td>Consolidado</td><td>Excel final con todos los documentos y sus datos (9 columnas fijas).</td></tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>12. Preguntas abiertas</h2>
+<ul>
+<li>¿Quién genera los archivos "Respuesta"? ¿Es un proveedor externo o un sistema propio?</li>
+<li>¿Los RUC deben salir de SUNAT o se puede confiar en "RUC – Respuesta"?</li>
+<li>¿El consolidado debe incluir la placa?</li>
+<li>¿Los documentos repetidos deben aparecer una vez o tantas veces como en la lista maestra (una por infracción)?</li>
+<li>¿Qué se hace con los DNI que no tienen respuesta?</li>
+</ul>
+
+</body>
+</html>

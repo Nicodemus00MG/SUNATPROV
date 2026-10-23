@@ -1,0 +1,491 @@
+<html>
+<head>
+<title>Consulta de Ruc - Opción de Múltiples Rucs</title>
+<!-- Bootstrap -->
+<link href="/a/js/libs/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+
+
+<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+<!--[if lt IE 9]>
+  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<![endif]--> 
+
+
+<style type="text/css">
+	.spanTituloMenu {
+		font-size: 1.1em;
+		font-weight: bold;
+	}
+	.sorting_disabled {
+		background-image: none !important;
+	}
+	
+	table.dataTable thead .sorting, table.dataTable thead .sorting_asc, table.dataTable thead .sorting_desc {
+		cursor: default;
+	}
+	
+	fieldset.linea-caja {
+		border: 1px solid #ddd;
+		padding: 0 1.4em 1.4em 1.4em;
+		margin: 0 0 1.5em 0;
+		border-radius: 5px;
+		-moz-border-radius: 5px;
+		-webkit-border-radius: 5px;
+	}
+	
+	fieldset.linea-caja.ligero {
+		padding-bottom: 0px !important;
+		margin-bottom: 12px !important;
+	}
+	
+	.linea-caja legend {
+		color: #9A9EA7;
+		font-size: 1em;
+		text-align: left;
+		width: auto;
+		padding: 0 10px;
+		border-bottom: none;
+		letter-spacing: 0.8px;
+	}
+	
+	.linea-caja legend {
+		color: #0063AE;
+		font-size: 1em;
+		text-align: left;
+		width: auto;
+		padding: 0 10px;
+		border-bottom: none;
+	}
+	
+	.linea-caja legend.ligero {
+		margin-bottom: 0px !important;
+	}
+	
+	.container{
+		margin-top: 50px;
+	}
+	
+	.div.dataTables_scroll table{
+		width: 100%;
+	}
+	.div.dataTables_scrollHead table{
+		width: 100%;
+	}
+	.div.dataTables_scrollHeadInner table{
+		width: 100%;
+	}
+	.div.dataTables_scrollBody table{
+		width: 100%;
+	}
+	.dataTables_scrollHeadInner
+	{
+		width: 100% !important;
+	}
+	#modalBodyMensajesValidacion{
+		max-height: 200px; 
+		overflow-y:auto;
+	}
+	
+	.container{
+		margin-top: 50px;
+	}
+	.loader {
+	      position: absolute;
+		  left: 90%;
+		  z-index: 1;
+		  border: 16px solid #f3f3f3;
+		  border-radius: 50%;
+		  border-top: 16px solid #3498db;
+		  width: 20px;
+		  height: 20px;
+		  -webkit-animation: spin 2s linear infinite;
+		  animation: spin 2s linear infinite;
+	}
+	
+	@keyframes spin {
+	    0% { transform: rotate(0deg); }
+	    100% { transform: rotate(360deg); }
+	}
+</style>
+	
+
+</head>
+
+
+<body>
+<div class="container">
+	<div class="row">
+		<div class="col-md-10 col-md-offset-1">
+			<!-- div>
+        		<h1>Consulta M&uacute;ltiple de RUC</h1>
+        	</div-->
+        	<div class="panel panel-primary">
+        		<!-- div class="panel-heading">Contenido del Archivo :</div-->
+        		<div class="panel-heading">
+        			<div class="row">
+								<div class="col-md-12 text-center">
+								 <span class="spanTituloMenu"> Consulta M&uacute;ltiple de RUC</span>
+								</div>
+							</div>
+        		</div>
+        		
+        		<div class="panel-body">
+        		
+        		<div class="row" id="divMsg">
+													
+							<div class="col-md-12  text-left" align="justify">
+							<p>Contenido del Archivo :
+							</div>
+						</div>
+        			
+       			<div class="row" id="divMsg">
+       				
+					<div class="col-md-3"><span id="lbContArch"></span></div>						
+					<div class="col-md-4" style="text-align: justify">
+					<label><p>Nombre del Campo</p></label>&nbsp;
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					<label><p>Longitud del dato (char)</p></label>&nbsp;
+					</div>
+				</div>
+				        			
+       			<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Numero Ruc </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					11
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Nombre / Raz&oacute;n Social </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					100
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Tipo de Contribuyente </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Profesi&oacute;n u Oficio </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Nombre Comercial </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Condici&oacute;n del Contribuyente </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Estado Contribuyente </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Fecha  de Inscripci&oacute;n </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10 (dd/mm/yyyy)
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Fecha de Inicio de Actividades </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10 (dd/mm/yyyy)
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Departamento </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Provincia </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Distrito </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Direcci&oacute;n </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					120
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Telefono (s) </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Fax </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					10
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Actividad de Comercio Exterior </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Actividad de Comercio Exterior </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Principal- CIIU </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Secundario 1- CIIU </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Secundario 2- CIIU </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					25
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Nuevo RUS </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					2
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Buen Contribuyente </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					110
+					</div>
+				</div>
+				
+				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Agentes de Retenci&oacute;n del IGV </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					110
+					</div>
+				</div>
+   
+   				<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Agentes de Percepci&oacute;n IGV-Venta Interna </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					110
+					</div>
+				</div>
+           
+  					<div class="row" id="divIngManual">
+					<div class="col-md-3"><span id="lbContArch"></span></div>
+					<div class="col-md-4" style="text-align: justify">
+					<p>Agentes de Percepci&oacute;n IGV-Combustible L&iacute;quido </p>
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3" style="text-align: center">
+					110
+					</div>
+				</div>         
+           
+           		<div class="row" id="divMsg">
+					<div class="col-md-3"><span id="lbContArch"></span></div>						
+					<div class="col-md-4" style="text-align: justify">
+					<p>Baja de Archivo:</p>&nbsp;
+					</div>
+					<div class="col-md-4"><span id="lbContArch"></span></div>
+					<div class="col-md-3">
+					<a href="https://www.sunat.gob.pe/cl-at-framework-unloadfile/descargaArchivoAlias?data0_num_id=43859569" target="_blank">RM20260527083844621.zip</a>
+					</div>
+					
+				</div>
+            
+        		
+        		<div class="row">
+        			<fieldset class="linea-caja">
+        				<legend>Para descargar el archivo debera:</legend>        				        				     
+      
+        				<div class="row" id="divMsg">
+        				
+													
+							<div class="col-md-2" style="text-align: right">
+							<p>1).-</p>&nbsp;
+							</div>
+							<div class="col-md-10" style="text-align: justify">
+							<p>Dar click derecho sobre el link</p>&nbsp;
+							</div>
+						</div>
+					
+						<div class="row" id="divMsg">
+        									
+							<div class="col-md-2" style="text-align: right">
+							<p>2).-</p>&nbsp;
+							</div>
+							<div class="col-md-10" style="text-align: justify">
+							<p>Seleccionar la opción "GUARDAR DESTINO COMO", buscar el directorio temporal (por ejemplo el /tmp de su disco c:/) donde será guardado el archivo y aceptar.</p>&nbsp;
+							</div>
+						</div>
+        			</fieldset>
+        		</div>
+        		
+        		
+        		
+        		<div class="row form-group" id="divAccionesRucArch">												
+								
+					<div class="col-md-12 text-center">															
+						<button class="btn btn-primary" id="btnBuscarBandAutImp" name="btnBuscarBandAutImp" type="button" onClick="history.go(-1)">
+							Retornar
+						</button>												
+						
+					</div>
+				</div>
+						
+						
+        	</div>
+        	</div>
+		</div>
+	</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+flowchart TD
+    A(["python sunat_ruc.py"]) --> B{"main: argumentos"}
+
+    B -->|"sin argumentos o --gui"| GUI["run_gui: ventana Tkinter"]
+    B -->|"RUCs sueltos"| M1["consult_ruc_manual"]
+    B -->|"--file archivo"| F0["consult_ruc_file"]
+    B -->|"--file y RUCs a la vez"| ERR1["Error: elegir solo una opcion"]
+
+    %% ---------- GUI ----------
+    GUI --> G1{"Boton presionado"}
+    G1 -->|"Seleccionar archivo"| G2["Dialogo de archivo en Desktop/DNI, Escritorio o Descargas"]
+    G2 --> G1
+    G1 -->|"Enviar a SUNAT"| F0
+    G1 -->|"Generar Consolidado"| C0["process_full_consolidado"]
+
+    %% ---------- MODO MANUAL ----------
+    M1 --> M2["GET BASE_URL para abrir sesion"]
+    M2 --> M3["POST accion=consManual + token + selRuc"]
+    M3 --> M4["Imprime el HTML en consola o lo guarda con --save"]
+
+    %% ---------- MODO ARCHIVO DE RUCs ----------
+    F0 --> F1{"Extension del archivo"}
+    F1 -->|".txt"| F2["Lee una linea por RUC y agrega la barra final"]
+    F1 -->|".xlsx / .xls"| F3["Lee la primera hoja, salta el encabezado y toma numeros de 8 a 11 digitos"]
+    F1 -->|"otra"| ERR2["Error de formato"]
+    F2 --> L0
+    F3 --> L0
+
+    %% ---------- MODO CONSOLIDADO DNI + RUC ----------
+    C0 --> C1["load_input_excel_data: detecta columnas por alias"]
+    C1 --> C2{"Cantidad de digitos del documento"}
+    C2 -->|"11 digitos"| C3["Se agrega a la lista de RUC a consultar"]
+    C2 -->|"otro largo"| C4["Se toma como DNI y se copia sin cambios"]
+    C3 --> C5{"Hay RUCs?"}
+    C5 -->|"si"| L0
+    C5 -->|"no"| P2
+
+    %% ---------- BUCLE DE LOTES (comun) ----------
+    L0["chunk_values: divide en lotes de 100"] --> L1["Crea un .txt temporal con el lote"]
+    L1 --> L2["GET BASE_URL: sesion y cookies"]
+    L2 --> L3["POST accion=consArchivo + tokenArch aleatorio + archivo"]
+    L3 --> L4["save_sunat_response"]
+
+    L4 --> R1{"Que respondio SUNAT"}
+    R1 -->|"ZIP o RAR directo"| R2["Guarda RMxxxx.zip en resultados_sunat"]
+    R1 -->|"HTML con enlace de descarga"| R3["find_archive_link y descarga el ZIP"]
+    R3 --> R2
+    R1 -->|"HTML con mensaje de error"| R4["Guarda resultado_sunat_batch_N_ERROR.txt"]
+    R1 -->|"Texto u otro"| R5["Guarda .txt o .xlsx del lote"]
+
+    R2 --> L5{"Quedan lotes?"}
+    R4 --> L5
+    R5 --> L5
+    L3 -.->|"error de red"| X["batch_error: se detiene todo el proceso"]
+    L5 -->|"si"| L1
+    L5 -->|"no"| K{"Que modo inicio el proceso"}
+
+    %% ---------- CONSOLIDACION ----------
+    K -->|"archivo de RUCs"| P1["consolidate_results: lee TODOS los .zip de la carpeta"]
+    P1 --> O1[("resultados_consolidados.xlsx")]
+
+    K -->|"consolidado DNI + RUC"| P2["parse_sunat_zip_results: arma un mapa RUC a datos"]
+    C4 --> P2
+    P2 --> P3["build_consolidated_output"]
+    P2 --> P4["build_updated_input_excel"]
+    P3 --> O2[("consolidado_final.xlsx")]
+    P4 --> O3[("nombre_input_actualizado.xlsx")]
+
+    O1 --> FIN(["Fin: mensaje en la ventana o en la consola"])
+    O2 --> FIN
+    O3 --> FIN

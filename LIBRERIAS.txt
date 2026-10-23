@@ -1,0 +1,26 @@
+pip install requests
+pip install openpyxl
+pip install tkcalendar
+
+
+pip install pandas xlrd openpyxl
+
+para código de verificación:
+
+pip install pandas openpyxl
+
+
+
+
+
+V7 DEFINITIVA
+
+
+22 
+27 OK 
+31 OK
+06 OK
+15 OK
+22 OK
+28 OK
+31 OK 
